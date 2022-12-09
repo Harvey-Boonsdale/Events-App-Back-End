@@ -1,16 +1,19 @@
+require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const app = express();
-const port = 3001;
-const createError = require("http-errors");
 
-let idno = 0;
-let eventList = [];
+const { ObjectId } = require("mongodb");
+const { Event } = require("./Model");
+
+const port = process.env.PORT;
+const url = process.env.CONNECTION_STRING;
 
 app.use(express.json());
 
 // Create an event
 
-app.post("/events", (req, res) => {
+app.post("/events", async (req, res) => {
   if (
     !req.body.name ||
     !req.body.location ||
@@ -20,54 +23,42 @@ app.post("/events", (req, res) => {
   ) {
     return res.sendStatus(400);
   }
-  eventList.push({ ...req.body, id: idno++ });
+  const event = new Event({
+    name: req.body.name,
+    location: req.body.location,
+    info: req.body.info,
+    date: req.body.date,
+    time: req.body.time,
+  });
+  await event.save();
   res.send("Event Added!");
 });
 
 // Read list of events+
 
-app.get("/events", (req, res) => {
-  res.send(eventList);
-  console.log(eventList);
+app.get("/events", async (req, res) => {
+  const events = await Event.find();
+  res.send(events);
 });
-
-// Update event
-
-// app.put("/events./:id", (req, res) => {
-//   const event = eventList.find((event) => event.id === Number(req.params.id));
-// if (
-//     !req.body.name ||
-//     !req.body.location ||
-//     !req.body.info ||
-//     !req.body.date ||
-//     !req.body.time
-//   ) {
-//     return res.sendStatus(400);
-//   }
-//   if (!event) {
-//     return res.sendStatus(404);
-//   }
-//   eventList = eventList.map((event) => {
-//     if(event.id === Number(req.params.id)); {
-//         return {...
-//     }
-//     }
-//   };
-// });
 
 // Delete event
 
-app.delete("/events/:id", (req, res) => {
-  const event = eventList.find((event) => event.id === Number(req.params.id));
-  if (!event) {
-    return res.sendStatus(404);
+app.delete("/events/:id", async (req, res) => {
+  const response = await Event.deleteOne({ _id: ObjectId(req.params.id) });
+  if (response.deletedCount) {
+    return res.send({ result: true });
+  } else {
+    res.sendStatus(404);
   }
-  eventList = eventList.filter((event) => {
-    return event.id !== Number(req.params.id);
-  });
-  res.send({ result: true });
 });
 
+mongoose.connect(url);
 app.listen(port, () => {
   console.log("server is live on port " + port);
+});
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "Connection error"));
+db.once("open", () => {
+  console.log("Database Connected");
 });
