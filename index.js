@@ -1,6 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
 const app = express();
 
 const { ObjectId } = require("mongodb");
@@ -9,7 +13,22 @@ const { Event } = require("./Model");
 const port = process.env.PORT;
 const url = process.env.CONNECTION_STRING;
 
-app.use(express.json());
+// adding Helmet to enhance your API's security
+app.use(helmet());
+
+// using bodyParser to parse JSON bodies into JS objects
+app.use(bodyParser.json());
+
+// enabling CORS for all requests
+app.use(cors());
+
+// adding morgan to log HTTP requests
+app.use(morgan("combined"));
+app.use(
+  express.json({
+    origin: ["http://localhost:3000", "https://events-app-403y.onrender.com"],
+  })
+);
 
 // Create an event
 
