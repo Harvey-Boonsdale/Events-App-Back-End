@@ -73,6 +73,31 @@ app.delete("/events/:id", async (req, res) => {
 
 // Edit Event
 
+app.put("/events/:id", async (req, res) => {
+  const event = await Event.findOne({ _id: ObjectId(req.params.id) });
+  if (!event) {
+    return res.sendStatus(404);
+  }
+  if (
+    !req.body.name ||
+    !req.body.location ||
+    !req.body.info ||
+    !req.body.date ||
+    !req.body.time
+  ) {
+    return res.sendStatus(400);
+  }
+
+  event.name = req.body.name;
+  event.location = req.body.location;
+  event.info = req.body.info;
+  event.date = req.body.date;
+  event.time = req.body.time;
+
+  await event.save();
+  res.send("Event Changed!");
+});
+
 mongoose.connect(url);
 app.listen(port, () => {
   console.log("server is live on port " + port);
