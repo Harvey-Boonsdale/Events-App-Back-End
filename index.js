@@ -71,6 +71,8 @@ app.delete("/events/:id", async (req, res) => {
   }
 });
 
+// Edit Event
+
 mongoose.connect(url);
 app.listen(port, () => {
   console.log("server is live on port " + port);
