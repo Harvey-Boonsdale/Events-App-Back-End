@@ -54,6 +54,7 @@ app.post("/events", async (req, res) => {
 });
 
 // Read list of events+
+// Comment
 
 app.get("/events", async (req, res) => {
   const events = await Event.find();
