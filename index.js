@@ -79,6 +79,7 @@ app.put("/events/:id", async (req, res) => {
   if (!event) {
     return res.sendStatus(404);
   }
+  console.log(req.body);
   if (
     !req.body.name ||
     !req.body.location ||
