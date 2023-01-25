@@ -4,10 +4,12 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
+("");
 const morgan = require("morgan");
 const app = express();
 
 const { ObjectId } = require("mongodb");
+const { User } = require("./Model");
 const { Event } = require("./Model");
 
 const port = process.env.PORT;
@@ -29,6 +31,36 @@ app.use(
     origin: ["http://localhost:3000", "https://events-app-403y.onrender.com"],
   })
 );
+
+// Front end sends request for user to login
+// if credentials are valid
+// send secret to allow past middleware
+
+app.post("/auth", async (req, res) => {
+  const user = await User.findOne({ username: req.body.username });
+
+  if (!user) {
+    return res.sendStatus(401);
+  }
+  if (user.password !== req.body.password) {
+    return res.sendStatus(404);
+  }
+  return res.send({ token: "secretString" });
+});
+
+app.get("/users", async (req, res) => {
+  res.send(await User.find());
+});
+
+// Custom Middleware for Authentication
+
+app.use((req, res, next) => {
+  if (req.headers.authorization === "secretString") {
+    next();
+  } else {
+    res.sendStatus(403);
+  }
+});
 
 // Create an event
 
@@ -54,7 +86,6 @@ app.post("/events", async (req, res) => {
 });
 
 // Read list of events+
-// Comment
 
 app.get("/events", async (req, res) => {
   const events = await Event.find();
