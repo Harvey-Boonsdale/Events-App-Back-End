@@ -15,6 +15,11 @@ const { Event } = require("./Model");
 const port = process.env.PORT;
 const url = process.env.CONNECTION_STRING;
 
+const dburi = process.env.CONNECTION_STRING;
+const { v4: uuidv4 } = require("uuid");
+
+mongoose.connect(dburi, { useNewUrlParser: true });
+
 // adding Helmet to enhance your API's security
 app.use(helmet());
 
@@ -43,9 +48,12 @@ app.post("/auth", async (req, res) => {
     return res.sendStatus(401);
   }
   if (user.password !== req.body.password) {
-    return res.sendStatus(404);
+    return res.sendStatus(403);
   }
-  return res.send({ token: "secretString" });
+  user.token = uuidv4();
+  await user.save();
+  console.log(user);
+  return res.send({ token: user.token });
 });
 
 app.get("/users", async (req, res) => {
@@ -54,8 +62,10 @@ app.get("/users", async (req, res) => {
 
 // Custom Middleware for Authentication
 
-app.use((req, res, next) => {
-  if (req.headers.authorization === "secretString") {
+app.use(async (req, res, next) => {
+  const userToken = req.headers.authorization;
+  const user = await User.findOne({ token: userToken });
+  if (user) {
     next();
   } else {
     res.sendStatus(403);
